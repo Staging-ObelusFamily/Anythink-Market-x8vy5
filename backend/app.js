@@ -8,7 +8,6 @@ var http = require("http"),
   session = require("express-session"),
   cors = require("cors"),
   passport = require("passport"),
-  errorhandler = require("errorhandler"),
   mongoose = require("mongoose");
 
 var isProduction = process.env.NODE_ENV === "production";
@@ -35,17 +34,12 @@ app.use(
   })
 );
 
-if (!isProduction) {
-  app.use(errorhandler());
-}
-
 if (!process.env.MONGODB_URI) {
   console.warn("Missing MONGODB_URI in env, please add it to your .env file");
 }
 
 mongoose.connect(process.env.MONGODB_URI);
-if (isProduction) {
-} else {
+if (!isProduction) {
   mongoose.set("debug", true);
 }
 
@@ -85,6 +79,11 @@ if (!isProduction) {
       }
     });
   });
+} else {
+  app.use((err, req, res, next) => {
+    console.error(err.stack)
+    res.status(500).send('Something went wrong.')
+  })
 }
 
 // production error handler
